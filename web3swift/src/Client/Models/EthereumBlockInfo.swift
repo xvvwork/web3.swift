@@ -8,6 +8,7 @@ import Foundation
 public struct EthereumBlockInfo: Equatable {
     public var number: EthereumBlock
     public var timestamp: Date
+    public var baseFeePerGas: String
     public var transactions: [String]
 }
 
@@ -15,9 +16,9 @@ extension EthereumBlockInfo: Codable {
     enum CodingKeys: CodingKey {
         case number
         case timestamp
+        case baseFeePerGas
         case transactions
     }
-
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -26,7 +27,11 @@ extension EthereumBlockInfo: Codable {
         }
 
         guard let timestampRaw = try? container.decode(String.self, forKey: .timestamp),
-              let timestamp = TimeInterval(timestampRaw) else {
+            let timestamp = TimeInterval(timestampRaw) else {
+                throw JSONRPCError.decodingError
+        }
+        
+        guard let baseFeePerGas = try? container.decode(String.self, forKey: .baseFeePerGas) else {
             throw JSONRPCError.decodingError
         }
 
@@ -36,6 +41,7 @@ extension EthereumBlockInfo: Codable {
 
         self.number = number
         self.timestamp = Date(timeIntervalSince1970: timestamp)
+        self.baseFeePerGas = baseFeePerGas
         self.transactions = transactions
     }
 
@@ -44,6 +50,7 @@ extension EthereumBlockInfo: Codable {
 
         try container.encode(number, forKey: .number)
         try container.encode(Int(timestamp.timeIntervalSince1970).web3.hexString, forKey: .timestamp)
+        try container.encode(baseFeePerGas, forKey: .baseFeePerGas)
         try container.encode(transactions, forKey: .transactions)
     }
 }
